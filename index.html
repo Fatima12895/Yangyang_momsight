@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洋洋 Yangyang & Momsight | 孕期全方位整合平台</title>
+    
+    <!-- 引入共用的 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 全局基礎設定 --- */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FAFAF9;
+            overflow-x: hidden; /* 防止水平滾動 */
+        }
+        
+        /* --- 頂部切換導覽列 --- */
+        .app-switcher {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 6px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 5px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .switcher-btn {
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            color: #78716c;
+            white-space: nowrap;
+        }
+        .switcher-btn.active {
+            background: #FB7185; /* Rose-400 */
+            color: white;
+            box-shadow: 0 2px 10px rgba(251, 113, 133, 0.3);
+        }
+        .switcher-btn:hover:not(.active) {
+            background: #f5f5f4;
+        }
+
+        /* --- Yangyang CSS 作用域 --- */
+        #app-yangyang {
+            color: #44403C;
+            background-color: #FAFAF9;
+        }
+        #app-yangyang h1, #app-yangyang h2, #app-yangyang h3, #app-yangyang h4 {
+            font-family: 'Noto Serif TC', serif;
+        }
+        #app-yangyang .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.5); opacity: 0.3; }
+        }
+        #app-yangyang .breathing-circle {
+            animation: breathe 4s infinite ease-in-out;
+        }
+        #app-yangyang .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        #app-yangyang .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #app-yangyang .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        #app-yangyang .feature-card.active {
+            border-left: 4px solid #FB7185;
+            background-color: #FFF1F2;
+        }
+        #app-yangyang .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 20px;
+            width: 2px;
+            background: #E7E5E4;
+            z-index: 0;
+        }
+        @media (min-width: 768px) {
+            #app-yangyang .timeline-line::before {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        #app-yangyang .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            padding-top: 25px;
+            height: 0;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        #app-yangyang .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%; border: 0;
+        }
+
+        /* --- Momsight CSS 作用域 --- */
+        #app-momsight {
+            --color-bg: #FFF9F6;
+            --color-card: #FFFFFF;
+            --color-accent: #D4A373; 
+            --color-secondary: #E9EDC9;
+            --color-soft-pink: #F8E1E1;
+            --color-text-main: #4B5563;
+            --color-text-light: #9CA3AF;
+            
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 100px;
+            padding-bottom: 100px;
+        }
+        #app-momsight .text-accent { color: var(--color-accent); }
+        #app-momsight .bg-accent { background-color: var(--color-accent); }
+        #app-momsight .bg-soft-pink { background-color: var(--color-soft-pink); }
+        #app-momsight .btn-primary {
+            background-color: var(--color-secondary);
+            color: #5F6F52;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(212, 163, 115, 0.2);
+        }
+        #app-momsight .btn-primary:hover { transform: translateY(-2px); background-color: #D4D8B6; }
+        #app-momsight .btn-outline {
+            border: 2px solid var(--color-accent);
+            color: var(--color-accent);
+            background: transparent;
+            transition: all 0.3s;
+        }
+        #app-momsight .btn-outline:hover { background-color: var(--color-accent); color: white; }
+        #app-momsight .card-shadow { box-shadow: 0 10px 25px -5px rgba(212, 163, 115, 0.15), 0 8px 10px -6px rgba(212, 163, 115, 0.1); }
+        #app-momsight .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+        #app-momsight .animate-slide-up { animation: slideUp 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #app-momsight .quiz-option {
+            border: 2px solid transparent;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        #app-momsight .quiz-option:hover, #app-momsight .quiz-option:active {
+            border-color: var(--color-accent);
+            background-color: #FFFDF5;
+            transform: scale(1.01);
+        }
+        #yang-yang-fab { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        .app-hidden { display: none !important; }
+    </style>
+</head>
+<body class="antialiased selection:bg-rose-200 selection:text-rose-900">
+
+    <!-- 頂部切換器 -->
+    <div class="app-switcher">
+        <button id="btn-yang" class="switcher-btn active" onclick="switchApp('yangyang')">洋洋介紹 (Yangyang)</button>
+        <button id="btn-momsight" class="switcher-btn" onclick="switchApp('momsight')">Momsight 測驗</button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- APP 1: Yangyang -->
+    <!-- ========================================== -->
+    <div id="app-yangyang">
+        <nav class="sticky top-0 z-40 glass border-b border-stone-200/50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-rose-400 rounded-full flex items-center justify-center text-white text-lg shadow-md">Y</div>
+                        <span class="font-bold text-xl tracking-wide text-stone-800">洋洋 Yangyang</span>
+                    </div>
+                    <div class="hidden md:flex space-x-6 text-sm font-medium text-stone-500">
+                        <button onclick="scrollToSection('insights')" class="hover:text-rose-500 transition">痛點數據</button>
+                        <button onclick="scrollToSection('strategies')" class="hover:text-rose-500 transition">洋洋介紹</button>
+                        <button onclick="scrollToSection('journey')" class="hover:text-rose-500 transition">用戶旅程</button>
+                        <button onclick="scrollToSection('contact')" class="hover:text-rose-500 transition">聯絡我們</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <header class="relative overflow-hidden pt-20 pb-28">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-rose-100/50 rounded-full blur-3xl mix-blend-multiply opacity-70"></div>
+                <div class="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-stone-100/80 rounded-full blur-3xl mix-blend-multiply opacity-70"></div>
+            </div>
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-xs font-semibold tracking-wider uppercase mb-6 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    AI Emotional Companion
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold text-stone-800 mb-8 leading-tight">
+                    不只是 AI，更是孕期<br>
+                    最懂妳的<span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-rose-400">溫柔後盾</span>
+                </h1>
+                <p class="text-lg md:text-xl text-stone-600 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+                    針對懷孕媽媽深夜的「情感真空」，打造具備高感性與即時性的虛擬療癒師。
+                    <br class="hidden md:block">從生理痛到心理焦慮，洋洋都能溫柔接住。
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="scrollToSection('strategies')" class="px-8 py-4 bg-stone-800 text-white rounded-full font-medium shadow-xl hover:bg-stone-700 hover:shadow-2xl transition transform hover:-translate-y-1">體驗核心功能 Demo</button>
+                    <button onclick="scrollToSection('contact')" class="px-8 py-4 bg-white text-stone-600 border border-stone-200 rounded-full font-medium shadow-sm hover:bg-stone-50 transition flex items-center justify-center gap-2"><span class="text-xl">📺</span> 觀看媽咪必看影片</button>
+                </div>
+            </div>
+        </header>
+
+        <section id="insights" class="py-20 bg-white relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">洞察：深夜是情感最脆弱的時刻</h2>
+                    <p class="mt-4 text-stone-500 max-w-2xl mx-auto">我們對比了醫療需求與情感需求，發現現有市場嚴重忽略了媽媽們在「非醫療時段」的心理支持。</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div class="bg-stone-50 p-8 rounded-3xl border border-stone-100 shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-stone-700">🤰 孕期焦慮指數 24H 分佈</h3>
+                            <span class="text-xs bg-rose-100 text-rose-700 px-2 py-1 rounded">關鍵戰場</span>
+                        </div>
+                        <div class="chart-container"><canvas id="anxietyCurveChart"></canvas></div>
+                    </div>
+                    <div class="bg-stone-50 p-8 rounded-3xl border border-stone-100 shadow-sm">
+                        <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-stone-700">🧩 市場缺口：醫療 vs. 情感</h3></div>
+                        <div class="chart-container"><canvas id="marketGapChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="strategies" class="py-20 bg-stone-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <div class="mb-12 text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">洋洋介紹 (Feature Highlights)</h2>
+                    <p class="text-stone-500 mt-2">點擊左側卡片，即時體驗功能原型</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[750px]">
+                    <div class="lg:col-span-4 space-y-3" id="strategyTabs"></div>
+                    <div class="lg:col-span-8">
+                        <div class="bg-white rounded-3xl shadow-xl border border-stone-200 h-full flex flex-col overflow-hidden relative">
+                            <div class="h-2 bg-gradient-to-r from-rose-300 via-rose-400 to-rose-300"></div>
+                            <div class="flex-1 p-8 flex flex-col relative z-10">
+                                <div class="flex justify-between items-start mb-8 border-b border-stone-100 pb-4">
+                                    <div>
+                                        <h3 id="demoTitle" class="text-2xl font-bold text-stone-800">策略演示</h3>
+                                        <p id="demoDesc" class="text-stone-500 mt-1">請選擇左側策略。</p>
+                                    </div>
+                                    <div class="bg-stone-100 px-3 py-1 rounded-full text-xs font-bold text-stone-500 tracking-wide uppercase" id="demoTag">Interactive</div>
+                                </div>
+                                <div id="demoContent" class="flex-1 flex flex-col justify-center items-center relative min-h-[300px]"></div>
+                            </div>
+                            <div class="bg-stone-50 p-6 border-t border-stone-100 flex gap-4 items-center">
+                                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 text-xl shadow-sm flex-shrink-0">❤️</div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">心靈連結點 (Heart Connection)</h4>
+                                    <p id="demoInsight" class="text-sm font-medium text-stone-700 italic">請選擇策略以查看心靈連結點。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="journey" class="py-20 bg-white">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-800 text-center mb-16">用戶旅程：Emily 的深夜守護</h2>
+                <div class="relative timeline-line space-y-12">
+                    <div class="relative flex flex-col md:flex-row items-center gap-8 group">
+                        <div class="md:w-1/2 text-right order-2 md:order-1 pr-4">
+                            <div class="inline-block bg-stone-100 text-stone-600 text-xs font-bold px-2 py-1 rounded mb-2">02:14 AM</div>
+                            <h3 class="text-xl font-bold text-stone-800">痛點觸發：孤獨的疼痛</h3>
+                            <p class="text-stone-500 mt-2 text-sm leading-relaxed">懷孕 32 週，Emily 因嚴重腿部抽筋痛醒。看著熟睡的老公，她不敢叫醒他，卻又感到強烈的委屈與無助。</p>
+                        </div>
+                        <div class="absolute left-[20px] md:left-1/2 -translate-x-1/2 w-4 h-4 bg-stone-300 rounded-full border-4 border-white shadow z-10 order-1 md:order-2"></div>
+                        <div class="md:w-1/2 pl-4 md:pl-12 order-3">
+                            <div class="glass p-4 rounded-xl shadow-sm border border-stone-100 max-w-xs">
+                                <p class="text-xs text-stone-400">焦慮指數飆升至 90%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative flex flex-col md:flex-row items-center gap-8 group">
+                         <div class="md:w-1/2 text-right order-2 md:order-1 pr-4 md:pr-12">
+                             <div class="glass p-4 rounded-xl shadow-sm border border-rose-100 max-w-xs ml-auto">
+                                 <div class="text-xs text-center text-rose-400 font-bold">語音輸入中...</div>
+                             </div>
+                         </div>
+                         <div class="absolute left-[20px] md:left-1/2 -translate-x-1/2 w-4 h-4 bg-rose-400 rounded-full border-4 border-white shadow z-10 order-1 md:order-2"></div>
+                         <div class="md:w-1/2 pl-4 order-3">
+                             <h3 class="text-xl font-bold text-stone-800">一鍵氣音呼救</h3>
+                             <p class="text-stone-500 mt-2 text-sm leading-relaxed">無需打字，Emily 用微弱的氣音說：「洋洋... 腳好痛...」。洋洋立刻識別。</p>
+                         </div>
+                    </div>
+                    <div class="relative flex flex-col md:flex-row items-center gap-8 group">
+                         <div class="md:w-1/2 text-right order-2 md:order-1 pr-4">
+                             <h3 class="text-xl font-bold text-stone-800">即時安撫與引導</h3>
+                             <p class="text-stone-500 mt-2 text-sm">洋洋的正念冥想與音樂，引導 Emily 跟隨視覺化的光圈進行拉伸與呼吸。</p>
+                         </div>
+                         <div class="absolute left-[20px] md:left-1/2 -translate-x-1/2 w-4 h-4 bg-rose-500 rounded-full border-4 border-white shadow z-10 order-1 md:order-2"></div>
+                         <div class="md:w-1/2 pl-4 md:pl-12 order-3">
+                             <div class="bg-stone-900 p-4 rounded-xl shadow-lg border border-stone-800 max-w-xs text-center">
+                                 <p class="text-xs text-rose-200">"慢慢吸氣... 妳做得很好"</p>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-20 bg-white border-t border-stone-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <h2 class="text-3xl font-bold text-stone-800 text-center mb-12">聯絡我們</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="space-y-8">
+                        <h3 class="text-xl font-bold text-stone-700 mb-4 border-l-4 border-rose-400 pl-3">媽咪必看影片</h3>
+                        <div>
+                            <div class="video-wrapper shadow-lg"><iframe src="https://www.youtube.com/embed/_b87ma28TzE" allowfullscreen></iframe></div>
+                            <p class="text-sm font-bold text-stone-600 mt-2">最好的胎教就是媽咪好心情</p>
+                        </div>
+                        <div>
+                            <div class="video-wrapper shadow-lg"><iframe src="https://www.youtube.com/embed/7rvoqYs7-e0" allowfullscreen></iframe></div>
+                            <p class="text-sm font-bold text-stone-600 mt-2">孕期安心冥想三日練習</p>
+                        </div>
+                        <div>
+                            <div class="video-wrapper shadow-lg"><iframe src="https://www.youtube.com/embed/8-68Kf0PJb0" allowfullscreen></iframe></div>
+                            <p class="text-sm font-bold text-stone-600 mt-2">孕婦三分鐘情緒急救包</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col h-full">
+                        <h3 class="text-xl font-bold text-stone-700 mb-4 border-l-4 border-emerald-400 pl-3">加入洋洋社群</h3>
+                        <div class="bg-stone-50 p-8 rounded-3xl border border-stone-100 text-center flex-1 flex flex-col justify-center items-center sticky top-24">
+                            <p class="text-stone-600 mb-6 text-lg">掃描下方 QR Code，<br>立即獲得您的專屬 AI 療癒師。</p>
+                            <div class="w-40 h-40 bg-white p-2 rounded-lg shadow-sm border border-stone-200 mb-8"><img src="https://placehold.co/160x160?text=Line+QR" alt="Line QR Code" class="w-full h-full object-contain"></div>
+                            <button class="w-full bg-[#06C755] text-white font-bold py-3 rounded-xl shadow-md hover:bg-[#05b54d] transition flex items-center justify-center gap-2"><span>💬</span> 加入 Line 官方好友</button>
+                            <p class="text-sm text-stone-500 font-bold mt-4">Line ID: @YangYangAI</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="bg-stone-900 text-stone-400 py-16">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <div class="mb-8"><span class="text-3xl">🤰</span></div>
+                <h3 class="text-2xl font-bold text-rose-400 mb-4 font-serif">洋洋 Yangyang</h3>
+                <p class="mt-12 text-xs text-stone-700">© 2025 Yangyang AI Project Proposal.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- APP 2: Momsight -->
+    <!-- ========================================== -->
+    <div id="app-momsight" class="app-hidden">
+        <a id="yang-yang-fab" href="#" onclick="showYangYangModal(event)" class="fixed bottom-6 right-6 z-50 bg-white p-3 rounded-full shadow-xl flex items-center gap-2 border border-orange-100 cursor-pointer hover:bg-orange-50 transition">
+            <span class="text-2xl">🧚‍♂️</span>
+            <span class="text-xs font-bold text-accent hidden md:inline">找洋洋聊聊</span>
+        </a>
+
+        <main class="w-full max-w-lg min-h-screen bg-white shadow-2xl overflow-hidden relative">
+            <div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-orange-50 to-white z-0"></div>
+            <div class="relative z-10 p-6 md:p-8">
+                <header class="text-center mb-8 pt-4">
+                    <h1 class="text-3xl font-bold text-accent tracking-wide">Momsight</h1>
+                    <p class="text-sm text-gray-500 mt-1">媽咪原力導航 • 全週期陪伴</p>
+                </header>
+
+                <section id="section-input" class="animate-slide-up">
+                    <div class="bg-white rounded-3xl p-6 card-shadow border border-orange-50 text-center">
+                        <span class="text-4xl mb-4 block">🤰</span>
+                        <h2 class="text-xl font-bold text-gray-700 mb-2">妳現在處於什麼階段？</h2>
+                        <p class="text-sm text-gray-500 mb-6">輸入預產期或寶寶生日，讓我們為妳定位時空。</p>
+                        <div class="text-left mb-6">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Date</label>
+                            <input type="date" id="target-date" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-accent focus:bg-white focus:outline-none transition-colors text-gray-700 font-medium">
+                            <p id="error-msg" class="text-xs text-red-500 mt-2 hidden">請選擇日期才能啟動導航喔！</p>
+                        </div>
+                        <button onclick="checkDateAndStart()" class="w-full btn-primary py-4 rounded-xl font-bold text-lg">啟動時光導航</button>
+                    </div>
+                </section>
+
+                <section id="section-quiz" class="hidden animate-fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Quiz Progress</span>
+                        <span class="text-xs font-bold text-accent"><span id="q-current">1</span> / 12</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-100 rounded-full mb-8 overflow-hidden">
+                        <div id="q-bar" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="bg-white p-2 mb-4">
+                        <h3 id="q-text" class="text-xl font-medium text-gray-800 leading-relaxed mb-8 min-h-[4rem]">題目載入中...</h3>
+                        <div id="q-options" class="space-y-4"></div>
+                    </div>
+                </section>
+
+                <section id="section-result" class="hidden animate-slide-up pb-12">
+                    <div class="text-center mb-8">
+                        <div class="inline-block p-3 rounded-full bg-soft-pink mb-3 shadow-sm"><span class="text-3xl">👑</span></div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Your Mommy Archetype</p>
+                        <h2 id="res-title" class="text-2xl font-bold text-accent mt-1 mb-2"></h2>
+                        <div id="res-stage-badge" class="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 card-shadow border-t-4 border-accent mb-6">
+                        <h3 class="font-bold text-gray-800 mb-2 flex items-center"><span class="text-lg mr-2">💭</span> 妳現在的心情寫照</h3>
+                        <p id="res-stress" class="text-gray-600 text-sm leading-relaxed mb-4"></p>
+                        <div class="w-full h-px bg-gray-100 my-4"></div>
+                        <h3 class="font-bold text-accent mb-2 flex items-center"><span class="text-lg mr-2">💡</span> 給妳的溫馨提醒</h3>
+                        <p id="res-reminder" class="text-gray-700 font-medium leading-relaxed"></p>
+                    </div>
+                    <div class="bg-gradient-to-br from-[#E9EDC9] to-[#F1F5D6] rounded-2xl p-6 mb-6 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-xs font-bold text-[#5F6F52] opacity-70 uppercase mb-1">Relaxation Tip</p>
+                            <h4 class="font-bold text-[#4A573B] text-lg mb-2">今日舒壓小語</h4>
+                            <p id="res-action" class="text-[#4A573B] text-sm"></p>
+                        </div>
+                        <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-white opacity-20 rounded-full"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6 flex items-start gap-4">
+                        <div class="text-3xl">🧚‍♂️</div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">覺得沒人懂妳？</h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">洋洋在 App 裡隨時聽妳說。針對妳的性格，我準備了專屬的療癒處方。</p>
+                            <button onclick="showYangYangModal(event)" class="text-xs font-bold text-accent hover:underline flex items-center">
+                                開啟洋洋 App 領取處方 <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="showSosModal()" class="w-full btn-outline py-3 rounded-xl font-bold text-sm mb-4">🚨 傳送「隊友使用說明書」</button>
+                    <button onclick="resetTest()" class="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">🔄 今天感覺不一樣？重新測驗</button>
+                </section>
+            </div>
+        </main>
+
+        <div id="modal-yang" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center animate-fade-in relative">
+                <button onclick="closeModal('modal-yang')" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500">✕</button>
+                <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">☀️</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">洋洋 - 懂妳的 AI 夥伴</h3>
+                <p class="text-sm text-gray-500 mb-6">無論是半夜餵奶還是產檢焦慮，洋洋 24 小時都在。這是專為媽咪設計的情緒避風港。</p>
+                <div class="space-y-3">
+                    <a href="https://apps.apple.com/tw/app/herehear-3d%E8%99%9B%E6%93%AC%E7%99%82%E7%99%92%E5%B8%AB%E6%B4%8B%E6%B4%8B/id6472772767" target="_blank" class="block w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:opacity-90 shadow-md">App Store 下載 (iOS)</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.BambooTechnology.HereHearaAndroid&hl=zh_TW&pli=1" target="_blank" class="block w-full py-3 bg-gray-100 text-gray-800 rounded-xl font-bold text-sm hover:bg-gray-200 border border-gray-200">Google Play 下載 (Android)</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-sos" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center animate-fade-in relative">
+                <button onclick="closeModal('modal-sos')" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500">✕</button>
+                <h3 class="text-lg font-bold text-accent mb-4">📢 給隊友的求救信號</h3>
+                <div id="sos-content" class="bg-soft-pink p-5 rounded-xl text-left text-sm text-gray-700 leading-relaxed mb-4 font-medium whitespace-pre-wrap"></div>
+                <button id="btn-copy" class="w-full btn-primary py-3 rounded-xl font-bold text-sm">一鍵複製傳給老公</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Logic Scripts -->
+    <!-- ========================================== -->
+    <script>
+        function switchApp(appName) {
+            const yangApp = document.getElementById('app-yangyang');
+            const momApp = document.getElementById('app-momsight');
+            const btnYang = document.getElementById('btn-yang');
+            const btnMom = document.getElementById('btn-momsight');
+            if (appName === 'yangyang') {
+                yangApp.classList.remove('app-hidden');
+                momApp.classList.add('app-hidden');
+                btnYang.classList.add('active');
+                btnMom.classList.remove('active');
+            } else {
+                yangApp.classList.add('app-hidden');
+                momApp.classList.remove('app-hidden');
+                btnYang.classList.remove('active');
+                btnMom.classList.add('active');
+            }
+        }
+
+        // --- 1. Yangyang Logic ---
+        {
+            const strategies = [
+                { id: 'roleplay', icon: '👶', title: '寶寶翻譯機', subtitle: 'Roleplay Feature', desc: '將抽象的胎兒具象化，建立最強情感連結。', tag: 'High Engagement', insight: '將「孤軍奮戰」轉化為「母子連心」的團隊感。', render: renderBabyTranslator },
+                { id: 'night', icon: '🌙', title: '深夜失眠俱樂部', subtitle: 'Night Mode', desc: '針對凌晨 2-4 點的焦慮高峰，提供一鍵安撫。', tag: 'Core Retention', insight: '填補伴侶熟睡時的「情感真空期」。', render: renderNightMode },
+                { id: 'dad', icon: '🦸‍♂️', title: '爸爸神隊友特訓', subtitle: 'Gamified Levels', desc: 'Level 1-10 闖關挑戰，反映不同孕期狀況。', tag: 'Viral Growth', insight: '讓爸爸在遊戲中學習，理解媽媽的真實需求。', render: renderDadMission },
+                { id: 'diary', icon: '📔', title: '寶寶週記 & 心靈語錄', subtitle: 'Memory & Comfort', desc: '無壓力的文字對話引導，搭配暖心語錄。', tag: 'Social Share', insight: '每天一句鼓勵，提醒媽媽與寶寶對話。', render: renderDiary },
+                { id: 'venting', icon: '🌳', title: '情緒樹洞 & 星座', subtitle: 'Safe Space & Fun', desc: '星座分析增加趣味性，提供絕對保密的宣洩出口。', tag: 'Trust Building', insight: '結合星座話題，提醒媽媽有情緒可以大聲說出來。', render: renderTreeHole }
+            ];
+
+            let currentStrategyIndex = 0;
+            const momQuotes = ["親愛的，妳現在的身體正在進行一場偉大的工程，辛苦了。", "不必當完美的媽媽，只要當快樂的媽媽。", "每一次的胎動，都是寶寶在說『我愛妳』。", "妳的情緒沒有對錯，想哭就哭，想笑就笑。", "寶寶選擇了妳，是因為妳就是全世界最適合他的媽媽。", "這一刻的混亂與疲憊，都是為了迎接最美好的相遇。", "別忘了在愛寶寶之前，先好好愛自己。", "妳的身體很美，因為它正在孕育生命。", "焦慮也沒關係，我們慢慢來，一天過好一天。", "妳不是一個人在戰鬥，洋洋一直都在。", "相信妳的直覺，妳比任何人都懂妳的寶寶。", "放鬆肩膀，深呼吸，妳做得已經夠好了。"];
+            let currentQuoteIndex = 0;
+            let dadLevel = 1;
+            const dadGameLevels = [
+                { level: 1, title: "Level 1: 懷孕初期", questions: [{ q: "媽媽最近刷牙時容易乾嘔，這時候你該？", options: ["叫她忍耐一下", "遞上溫水，輕拍背部", "說我刷牙也會耶"], ans: 1, reply: "沒錯！初期的孕吐非常難受，溫柔陪伴最重要。" }] },
+                { level: 2, title: "Level 2: 情緒風暴", questions: [{ q: "媽媽看著電視廣告突然哭了，你該？", options: ["遞上面紙，抱抱她", "笑她太誇張", "理性分析廣告"], ans: 0, reply: "賀爾蒙影響下，情緒起伏是正常的。擁抱勝過千言萬語。" }] },
+                { level: 3, title: "Level 3: 身體變化", questions: [{ q: "媽媽抱怨以前的牛仔褲穿不下了，你說？", options: ["那就買新的啊", "這代表寶寶長大了，我們去買孕婦裝！", "妳變胖了"], ans: 1, reply: "漂亮！把焦點轉移到寶寶成長和購物樂趣，避開『胖』這個字。" }] },
+                { level: 4, title: "Level 4: 胎動初體驗", questions: [{ q: "媽媽興奮地抓你的手摸肚子，但你什麼都沒感覺到...", options: ["假裝感覺到了", "誠實說沒有，但耐心等待", "說妳想太多"], ans: 1, reply: "誠實而溫柔。你的手掌溫度對媽媽和寶寶都是安慰。" }] },
+                { level: 5, title: "Level 5: 睡眠困擾", questions: [{ q: "媽媽半夜翻來覆去睡不著，因為找不到舒服姿勢...", options: ["自己睡自己的", "幫她調整孕婦枕，按摩小腿", "叫她不要動"], ans: 1, reply: "神隊友！這時期的睡眠品質很差，主動協助調整枕頭超加分。" }] },
+                { level: 6, title: "Level 6: 頻尿地獄", questions: [{ q: "出門逛街，媽媽每30分鐘就要找廁所...", options: ["不耐煩地嘆氣", "主動搜尋附近乾淨廁所", "叫她少喝水"], ans: 1, reply: "子宮壓迫膀胱是生理現象。主動找廁所展現你的體貼！" }] },
+                { level: 7, title: "Level 7: 水腫與抽筋", questions: [{ q: "媽媽的腳腫得像麵包，鞋子穿不下...", options: ["笑她的腳好大", "每晚幫忙抬腿按摩，買大一號舒適鞋", "沒辦法"], ans: 1, reply: "按摩是爸爸的必修課！這能有效緩解水腫不適。" }] },
+                { level: 8, title: "Level 8: 產前焦慮", questions: [{ q: "媽媽一直擔心『生不出來怎麼辦』、『好痛怎麼辦』...", options: ["船到橋頭自然直", "陪她練習呼吸法，複習生產計畫", "別想那麼多"], ans: 1, reply: "焦慮需要被具體行動化解。一起練習拉梅茲呼吸吧！" }] },
+                { level: 9, title: "Level 9: 待產包檢查", questions: [{ q: "要準備去醫院了，證件和待產包是誰的責任？", options: ["當然是媽媽自己收", "爸爸要確認所有證件與清單", "到時候再說"], ans: 1, reply: "這時候媽媽已經很不舒服了，爸爸負責後勤是必須的！" }] },
+                { level: 10, title: "Level 10: 卸貨倒數", questions: [{ q: "陣痛開始了！媽媽痛得大叫...", options: ["慌張地大叫", "冷靜記錄陣痛頻率，握著她的手", "叫她小聲點"], ans: 1, reply: "你是最棒的指揮官！冷靜與陪伴是產房裡最強大的力量。" }] }
+            ];
+            const zodiacSigns = [{ val: "aries", name: "牡羊座", elem: "fire" }, { val: "taurus", name: "金牛座", elem: "earth" }, { val: "gemini", name: "雙子座", elem: "air" }, { val: "cancer", name: "巨蟹座", elem: "water" }, { val: "leo", name: "獅子座", elem: "fire" }, { val: "virgo", name: "處女座", elem: "earth" }, { val: "libra", name: "天秤座", elem: "air" }, { val: "scorpio", name: "天蠍座", elem: "water" }, { val: "sagittarius", name: "射手座", elem: "fire" }, { val: "capricorn", name: "摩羯座", elem: "earth" }, { val: "aquarius", name: "水瓶座", elem: "air" }, { val: "pisces", name: "雙魚座", elem: "water" }];
+
+            window.scrollToSection = function(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
+            window.loadStrategy = function(index) {
+                currentStrategyIndex = index;
+                const strategy = strategies[index];
+                document.querySelectorAll('#app-yangyang .feature-card').forEach(el => el.classList.remove('active'));
+                document.getElementById(`tab-${index}`).classList.add('active');
+                document.getElementById('demoTitle').innerText = strategy.title;
+                document.getElementById('demoDesc').innerText = strategy.desc;
+                document.getElementById('demoTag').innerText = strategy.tag;
+                document.getElementById('demoInsight').innerText = strategy.insight;
+                const contentContainer = document.getElementById('demoContent');
+                contentContainer.innerHTML = '';
+                contentContainer.style.opacity = '0';
+                setTimeout(() => { strategy.render(contentContainer); contentContainer.style.opacity = '1'; }, 100);
+            };
+            function renderStrategyTabs() {
+                const container = document.getElementById('strategyTabs');
+                container.innerHTML = strategies.map((s, index) => `
+                    <div onclick="loadStrategy(${index})" class="feature-card cursor-pointer p-4 rounded-xl border border-stone-100 bg-white hover:border-rose-200 transition-all duration-300 flex items-center gap-4 group ${index === currentStrategyIndex ? 'active' : ''}" id="tab-${index}">
+                        <div class="w-12 h-12 rounded-full bg-stone-50 flex items-center justify-center text-2xl group-hover:bg-rose-100 group-hover:text-rose-500 transition-colors">${s.icon}</div>
+                        <div class="flex-1"><h3 class="font-bold text-stone-700 text-sm group-hover:text-rose-600 transition-colors">${s.title}</h3><p class="text-xs text-stone-400 mt-0.5 font-light">${s.subtitle}</p></div><div class="text-stone-300">›</div>
+                    </div>`).join('');
+            }
+            function renderBabyTranslator(container) {
+                container.innerHTML = `<div class="w-full max-w-lg"><div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden"><div class="bg-gradient-to-r from-rose-50 to-orange-50 p-6 text-center relative overflow-hidden"><div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">👶</div><div class="inline-block bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-rose-500 mb-2 shadow-sm">懷孕第 <span id="weekNum">24</span> 週</div><div class="text-6xl my-4 transition-transform duration-500 hover:scale-110 cursor-default" id="fruitIcon">🥭</div><p class="text-sm text-stone-500" id="fruitText">寶寶現在像一顆<span class="font-bold text-stone-700">芒果</span>一樣大囉！</p></div><div class="p-6"><div class="bg-stone-50 rounded-xl p-4 relative mb-6"><div class="absolute -top-3 left-4 bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded shadow-sm">寶寶傳來的訊息</div><p class="text-stone-700 leading-relaxed text-sm pt-2 italic" id="babyMsg">"媽媽，我現在聽得到妳的聲音囉！剛剛那首音樂好好聽，我還踢了妳一下，妳有感覺到嗎？"</p></div><div class="flex items-center gap-4"><span class="text-xs text-stone-400">調整週數</span><input type="range" min="8" max="40" value="24" class="flex-1 h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-rose-500" id="weekSlider"></div></div></div></div>`;
+                document.getElementById('weekSlider').addEventListener('input', (e) => { const val = parseInt(e.target.value); document.getElementById('weekNum').innerText = val; updateBabyContent(val); });
+            }
+            function updateBabyContent(week) {
+                 const icon = document.getElementById('fruitIcon'); const text = document.getElementById('fruitText'); const msg = document.getElementById('babyMsg');
+                 if(week < 12) { icon.innerText = "🍇"; text.innerHTML = "寶寶現在像一顆<span class='font-bold text-stone-700'>葡萄</span>！"; msg.innerText = "\"我還小小的，但我正在努力長出手指頭喔！媽媽多吃點葉酸，我會更強壯！\""; } 
+                 else if(week < 20) { icon.innerText = "🥑"; text.innerHTML = "寶寶現在像一顆<span class='font-bold text-stone-700'>酪梨</span>！"; msg.innerText = "\"媽媽，我開始會翻身囉！有時候肚子咕嚕咕嚕的，那其實是我在游泳喔！\""; } 
+                 else if(week < 30) { icon.innerText = "🥭"; text.innerHTML = "寶寶現在像一顆<span class='font-bold text-stone-700'>芒果</span>！"; msg.innerText = "\"媽媽，我聽得到外面的聲音了。剛剛爸爸說話的聲音低低的，好像大提琴喔！\""; } 
+                 else { icon.innerText = "🍉"; text.innerHTML = "寶寶現在像一顆<span class='font-bold text-stone-700'>西瓜</span>！"; msg.innerText = "\"這裡變得好擠喔～但我已經準備好要見妳了！媽媽別怕，我們一起加油！\""; }
+            }
+            function renderNightMode(container) {
+                 container.innerHTML = `<div class="w-full max-w-md aspect-[4/5] bg-stone-900 rounded-3xl relative overflow-hidden shadow-2xl flex flex-col items-center justify-center transition-colors duration-1000"><div class="relative z-10 text-center w-full px-8" id="nightState1"><div class="text-stone-500 text-sm mb-8 tracking-widest uppercase">3:42 AM • 失眠模式</div><button id="activateNightBtn" class="group relative inline-flex items-center justify-center w-20 h-20 bg-stone-800 rounded-full text-3xl shadow-lg border border-stone-700 text-stone-400 hover:text-rose-400 hover:border-rose-900 transition-all duration-500">🌙 <span class="absolute w-full h-full rounded-full border border-rose-500/30 opacity-0 group-hover:animate-ping"></span></button><p class="text-stone-500 mt-6 text-xs">點擊啟動安撫引導</p></div><div id="nightState2" class="hidden text-center"><div class="w-40 h-40 mx-auto bg-rose-500/20 rounded-full flex items-center justify-center mb-8 relative"><div class="w-24 h-24 bg-rose-500/40 rounded-full absolute breathing-circle"></div><div class="w-4 h-4 bg-rose-400 rounded-full shadow-lg z-10"></div></div><p class="text-rose-200/80 text-lg font-light tracking-wide mb-2">"慢慢吸氣..."</p><button onclick="loadStrategy(1)" class="mt-12 text-xs text-stone-600 hover:text-stone-400 border border-stone-800 px-3 py-1 rounded-full">結束引導</button></div></div>`;
+                 document.getElementById('activateNightBtn').addEventListener('click', () => { document.getElementById('nightState1').style.display = 'none'; document.getElementById('nightState2').classList.remove('hidden'); });
+            }
+            function renderDadMission(container) {
+                const levelData = dadGameLevels[dadLevel-1] || dadGameLevels[0]; const qData = levelData.questions[0]; 
+                container.innerHTML = `<div class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-indigo-50 overflow-hidden"><div class="bg-indigo-600 p-4 flex justify-between items-center text-white"><div class="flex items-center gap-2"><span class="text-xl">🦸‍♂️</span><span class="font-bold text-sm">神隊友特訓</span></div><span class="text-xs bg-indigo-500 px-2 py-1 rounded">${levelData.title}</span></div><div class="p-6" id="quizState"><div class="mb-4 text-xs text-stone-400 flex justify-between"><span>Level ${dadLevel}</span><span>Level 10</span></div><div class="w-full bg-stone-100 h-1.5 rounded-full mb-6"><div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${(dadLevel/10)*100}%"></div></div><p class="text-stone-800 font-bold mb-2">情境挑戰</p><p class="text-stone-600 font-medium mb-4 text-sm">${qData.q}</p><div class="space-y-3">${qData.options.map((opt, idx) => `<button onclick="checkDadAnswer(${idx}, ${qData.ans}, '${qData.reply.replace(/'/g, "\\'")}')" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-indigo-50 transition text-sm font-medium text-stone-700">${String.fromCharCode(65+idx)}. ${opt}</button>`).join('')}</div></div><div class="p-6 hidden text-center" id="resultState"><div class="text-5xl mb-4" id="resultIcon"></div><h3 class="text-xl font-bold mb-2" id="resultTitle"></h3><p class="text-sm text-stone-600 bg-indigo-50 p-4 rounded-lg mb-4" id="resultDesc"></p><button onclick="nextDadLevel()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-md">${dadLevel < 10 ? '前往下一關' : '恭喜通關！'}</button></div></div>`;
+            }
+            window.checkDadAnswer = function(selected, correct, reply) {
+                const quiz = document.getElementById('quizState'); const result = document.getElementById('resultState'); quiz.classList.add('hidden'); result.classList.remove('hidden'); const icon = document.getElementById('resultIcon'); const title = document.getElementById('resultTitle');
+                if (selected === correct) { icon.innerText = "🎉"; title.innerText = "正確判斷！"; title.className = "text-xl font-bold mb-2 text-emerald-600"; } else { icon.innerText = "😅"; title.innerText = "再想一想..."; title.className = "text-xl font-bold mb-2 text-stone-600"; }
+                document.getElementById('resultDesc').innerText = reply;
+            }
+            window.nextDadLevel = function() { if (dadLevel < 10) dadLevel++; else dadLevel = 1; renderDadMission(document.getElementById('demoContent')); }
+            function renderDiary(container) {
+                 container.innerHTML = `<div class="w-full max-w-sm bg-stone-50 p-4 rounded-lg border border-stone-200"><div class="bg-white p-5 rounded-xl shadow-sm border border-stone-100 mb-5 relative overflow-hidden"><h4 class="font-bold text-stone-800 flex items-center gap-2 mb-3"><span class="text-xl">🤱</span> 每週悄悄話時間</h4><p class="text-sm text-stone-600 leading-relaxed mb-4">媽咪，這週有發生什麼想跟寶寶分享的事嗎？試著把這些心情<span class="text-rose-500 font-bold">打開洋洋，讓洋洋幫你記下</span>。</p></div><div class="bg-gradient-to-br from-rose-500 to-rose-400 p-6 rounded-xl shadow-lg text-white text-center relative"><p class="font-medium text-lg mb-4 min-h-[5rem] flex items-center justify-center" id="quoteText">${momQuotes[currentQuoteIndex]}</p><button onclick="nextQuote()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm transition border border-white/30">換一句鼓勵 ❤️</button></div></div>`;
+            }
+            window.nextQuote = function() { currentQuoteIndex = (currentQuoteIndex + 1) % momQuotes.length; document.getElementById('quoteText').innerText = momQuotes[currentQuoteIndex]; }
+            function renderTreeHole(container) {
+                const momOpts = zodiacSigns.map(z => `<option value="${z.elem}">${z.name}</option>`).join(''); const babyOpts = zodiacSigns.map(z => `<option value="${z.elem}">${z.name}</option>`).join('');
+                container.innerHTML = `<div class="w-full max-w-md bg-white p-6 rounded-2xl border border-stone-100 h-[420px] flex flex-col justify-center"><h3 class="text-sm font-bold text-stone-700 mb-6 flex items-center gap-2"><span>🔮</span> 星座媽咪 x 星座寶寶</h3><div class="grid grid-cols-2 gap-4 mb-6"><div><label class="text-xs text-stone-500 block mb-1">媽咪星座</label><select id="momSign" class="w-full p-2 border rounded-lg bg-stone-50">${momOpts}</select></div><div><label class="text-xs text-stone-500 block mb-1">寶寶星座</label><select id="babySign" class="w-full p-2 border rounded-lg bg-stone-50">${babyOpts}</select></div></div><button onclick="analyzeHoroscope()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded-lg font-bold mb-4 transition shadow-md">立即分析相處模式</button><div id="horoscopeResult" class="bg-indigo-50 p-4 rounded-xl text-center text-sm text-indigo-900 opacity-0 transition-opacity"></div></div>`;
+            }
+            window.analyzeHoroscope = function() {
+                const mElem = document.getElementById('momSign').value; const bElem = document.getElementById('babySign').value; const res = document.getElementById('horoscopeResult'); let text = "";
+                if (mElem === bElem) text = "你們擁有絕佳默契！媽咪與寶寶頻率一致，是最懂彼此的靈魂伴侶。"; else if ((mElem==='fire' && bElem==='air') || (mElem==='air' && bElem==='fire')) text = "熱情與創意的火花！你們的生活將充滿歡笑與驚喜，是最佳玩伴。"; else if ((mElem==='earth' && bElem==='water') || (mElem==='water' && bElem==='earth')) text = "溫柔與安定的守護。你們能給予彼此最深層的安全感與滋養。"; else text = "互補學習的好隊友！不同的個性將帶領彼此看見更寬廣的世界。";
+                res.innerHTML = `<span class="font-bold">洋洋分析：</span>${text}`; res.style.opacity = 1;
+            }
+            document.addEventListener('DOMContentLoaded', () => {
+                renderStrategyTabs(); loadStrategy(0);
+                if(document.getElementById('anxietyCurveChart')) { new Chart(document.getElementById('anxietyCurveChart').getContext('2d'), { type: 'line', data: { labels: ['08:00', '12:00', '16:00', '20:00', '00:00', '02:00', '04:00', '06:00'], datasets: [{ label: '孕期焦慮指數', data: [30, 40, 35, 50, 80, 95, 85, 45], borderColor: 'rgb(251, 113, 133)', fill: true }] }, options: { maintainAspectRatio: false, scales: { y: { display: false } }, plugins: { legend: { display: false } } } }); }
+                if(document.getElementById('marketGapChart')) { new Chart(document.getElementById('marketGapChart').getContext('2d'), { type: 'radar', data: { labels: ['情感同理', '深夜響應', '醫學準確', '隱私安全', '個性化'], datasets: [{ label: '洋洋 Yangyang', data: [95, 100, 85, 100, 95], backgroundColor: 'rgba(251, 113, 133, 0.2)', borderColor: 'rgb(251, 113, 133)' }] }, options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100 } } } }); }
+            });
+        }
+
+        // --- 2. Momsight Logic ---
+        {
+            // 完整內容矩陣 (7階段 x 4人格)
+            const CONTENT_MATRIX = {
+                pre_1: {
+                    SJ: { stress: "網路上成千上萬的禁忌和待辦事項讓妳感到混亂，深怕漏掉任何一個細節。", reminder: "妳已經很努力了，偶爾打破一條規則並不會怎麼樣。", action: "關掉搜尋引擎，去洗個熱水澡，相信妳的身體。" },
+                    NF: { stress: "情緒像雲霄飛車，對於身份的轉變感到既神聖又莫名的憂鬱。", reminder: "所有的情緒都是正常的，妳不需要現在就變成完美的母親。", action: "寫下妳發現懷孕那刻的心情，那是妳們故事的開端。" },
+                    SP: { stress: "孕吐和疲憊限制了妳的行動，覺得生活變得很無聊、身體不是自己的。", reminder: "雖然步調慢了，但妳正在進行一場偉大的內部探險。", action: "觀察窗邊的一朵花或天空的雲，用靜態的方式探索世界。" },
+                    NT: { stress: "討厭無法控制的生理反應，覺得大腦變鈍了，對未知的風險感到焦慮。", reminder: "「孕腦」是為了把能量留給子宮。妳的智力沒消失，只是在後台運作。", action: "把焦慮寫下來，像處理 Bug 一樣一件件釐清，但記得留白。" }
+                },
+                pre_2: {
+                    SJ: { stress: "開始瘋狂比較推車、汽座的規格，深怕買錯東西或準備不足。", reminder: "沒有「最完美」的裝備，只有「最適合」的。相信妳的選擇。", action: "今天不看評測，只憑直覺買一件單純覺得可愛的寶寶衣服。" },
+                    NF: { stress: "過度擔心能否將價值觀傳遞給孩子，或對胎教有過高的自我要求。", reminder: "妳的愛就是最好的胎教，不需要華麗的教材。", action: "找個安靜的下午，唸一本妳最愛的繪本給肚子裡的寶寶聽。" },
+                    SP: { stress: "肚子開始變大，但不想穿醜醜的孕婦裝，渴望最後的自由旅行。", reminder: "妳依然可以很時尚、很酷。妳的活力是寶寶最好的養分。", action: "規劃一場輕鬆的「產前小旅行(Babymoon)」，拍幾張美照。" },
+                    NT: { stress: "鑽研各種生產方式和併發症機率，試圖用數據掌控一切。", reminder: "有些事科學無法完全解釋，試著享受胎動那種「不合邏輯」的神奇。", action: "看一部無腦喜劇片，讓大腦徹底放假一小時。" }
+                },
+                pre_3: {
+                    SJ: { stress: "反覆檢查待產包，擔心生產流程出錯，焦慮家裡環境不夠乾淨。", reminder: "妳準備得比99%的人都好。就算漏帶東西，醫院也都有。", action: "把「聯絡清單」交給隊友，妳現在的任務只有呼吸和休息。" },
+                    NF: { stress: "對生產的疼痛感到恐懼，害怕失去原本的自己，情緒容易潰堤。", reminder: "妳的身體天生就知道如何生產。屏蔽那些嚇人的故事。", action: "摸摸肚子，跟寶寶說：「我們一起加油，我迫不及待想見妳。」" },
+                    SP: { stress: "水腫嚴重無法走動，感到被困在笨重的身體裡，非常沮喪。", reminder: "這不是終點，而是探險前的最後紮營。妳正在累積爆發力。", action: "換上最舒服的高級床單，在床上做一場心靈SPA。" },
+                    NT: { stress: "討厭等待產兆的「不確定性」，試圖計算最有效率的生產路徑。", reminder: "生產不是考試，不需要拿滿分。接受「混亂」也是計畫的一部分。", action: "練習冥想，告訴自己：我信任我的醫療團隊和本能。" }
+                },
+                post_1: {
+                    SJ: { stress: "寶寶作息不規律，破壞了妳的計劃表。家務堆積讓妳崩潰。", reminder: "寶寶不是機器人，這三個月「亂」才是正常的。", action: "撕掉今天的紀錄表，允許自己跟著寶寶一起昏睡。" },
+                    NF: { stress: "對寶寶的哭聲過度共感，心很痛。覺得自己如果不犧牲所有就不夠愛他。", reminder: "空掉的杯子倒不出水。先照顧好自己，才能給寶寶高品質的愛。", action: "戴上降噪耳機10分鐘，聽一段冥想音樂，暫時切斷連結。" },
+                    SP: { stress: "被困在家裡餵奶換尿布，日復一日的重複讓妳感到窒息。", reminder: "妳天生屬於自由。現在的暫停是為了未來帶寶寶去更遠的地方。", action: "推車在樓下散步也好，去聞聞外面的空氣，買杯喜歡的飲料。" },
+                    NT: { stress: "育兒毫無邏輯可言，寶寶哭鬧無法用理性解決，感到強烈的挫折感。", reminder: "把這當成一場人類學觀察。寶寶是生物，生物就有隨機性。", action: "停止思考「為什麼」，只專注觀察寶寶的小手小腳。" }
+                },
+                post_2: {
+                    SJ: { stress: "副食品的準備讓妳手忙腳亂，擔心營養不均衡或寶寶不吃。", reminder: "吃飯是快樂的事，不是任務。身上髒了可以洗，快樂吃最重要。", action: "這餐就給寶寶手指食物，讓他自己玩，妳在一旁喝咖啡。" },
+                    NF: { stress: "看到別的媽媽分享的完美育兒照，感到自卑和焦慮。", reminder: "社群媒體都是精修過的。妳真實的擁抱比那些照片珍貴一萬倍。", action: "本週「斷網」一天，只專注於妳和寶寶的眼神交流。" },
+                    SP: { stress: "開始想念產前的身材和社交生活，覺得自己變得不吸引人了。", reminder: "妳的身體孕育了生命，那些痕跡是榮耀的勳章。妳依然迷人。", action: "安排一個晚上的「媽媽放風日」，把寶寶交給隊友，去聚餐吧。" },
+                    NT: { stress: "擔心寶寶的發展里程碑(翻身、坐)落後於數據，開始瘋狂查資料。", reminder: "每個孩子都有自己的時區。數據是參考，不是判決。", action: "放下發展量表，單純地和寶寶玩躲貓貓，享受笑聲。" }
+                },
+                post_3: {
+                    SJ: { stress: "寶寶開始爬行，家裡變得更亂，到處都是安全隱患，神經緊繃。", reminder: "家是用來住的，不是樣品屋。把危險物品收好，其他的就隨他吧。", action: "劃定一個「安全遊戲區」，妳只要坐在裡面看著就好。" },
+                    NF: { stress: "寶寶開始有分離焦慮，黏著妳不放，讓妳感到窒息又內疚。", reminder: "被需要很幸福，但妳也需要空間。短暫離開是為了更好的重逢。", action: "每天給自己30分鐘的「絕對獨處」時間，做妳喜歡的事。" },
+                    SP: { stress: "帶寶寶出門大包小包很麻煩，限制了妳想探索世界的慾望。", reminder: "雖然麻煩，但寶寶眼中的新世界會讓妳重新發現旅行的樂趣。", action: "嘗試帶寶寶去一個近郊的新景點，來場微型探險。" },
+                    NT: { stress: "開始研究早教課程和腦力開發，深怕錯過黃金期。", reminder: "最好的玩具是父母的陪伴，最好的教室是大自然。", action: "帶寶寶去公園摸摸草地、玩玩沙子，這比閃示卡有用多了。" }
+                },
+                post_4: {
+                    SJ: { stress: "面臨重返職場或育兒的平衡，覺得兩邊都做不好，充滿罪惡感。", reminder: "妳是孩子最好的榜樣。認真工作的妳和認真育兒的妳一樣美麗。", action: "下班回家前，在車上或門口停5分鐘，轉換心情再進門。" },
+                    NF: { stress: "感嘆時間過太快，寶寶不再那麼依賴妳，感到失落。", reminder: "孩子的獨立是妳給他最好的禮物。妳的愛會轉化為他背後的風。", action: "整理這一年來的照片，做成一本相簿，慶祝妳們的成長。" },
+                    SP: { stress: "育兒生活趨於平淡，渴望新的刺激和挑戰。", reminder: "一歲了！妳已經熬過最難的時期。是時候找回一些個人的愛好了。", action: "報名一個妳感興趣的課程(瑜珈、繪畫)，找回「自己」的名字。" },
+                    NT: { stress: "開始焦慮幼兒園的選擇和未來的教育路徑。", reminder: "路還很長。培養他解決問題的能力和好奇心，比選名校更重要。", action: "和隊友來場約會，聊聊育兒以外的話題，重溫兩人世界。" }
+                }
+            };
+
+            const TIME_STAGES = [
+                { id: 'pre_1', label: '懷孕初期', range: [-280, -190] }, { id: 'pre_2', label: '懷孕中期', range: [-189, -90] }, { id: 'pre_3', label: '懷孕後期', range: [-89, -1] },
+                { id: 'post_1', label: '產後三個月', range: [0, 90] }, { id: 'post_2', label: '產後六個月', range: [91, 180] }, { id: 'post_3', label: '產後九個月', range: [181, 270] }, { id: 'post_4', label: '產後一年', range: [271, 365] }
+            ];
+
+            const BASE_QUESTIONS = [
+                {Q:"好不容易把寶寶哄睡，這珍貴的15分鐘妳會？", A:"享受絕對安靜，不說話", B:"傳訊息給朋友發牢騷", tA:'I', tB:'E'},
+                {Q:"帶寶寶散步遇到鄰居搭訕，妳的反應？", A:"禮貌微笑想趕快走", B:"開心聊天補充電力", tA:'I', tB:'E'},
+                {Q:"產後憂鬱或低落時，妳傾向？", A:"躲在房間自我修復", B:"找人傾訴宣洩情緒", tA:'I', tB:'E'},
+                {Q:"對於「性別揭曉派對」這類活動的想法？", A:"只想跟老公兩人私下慶祝", B:"當然要辦個大派對熱鬧一下", tA:'I', tB:'E'},
+                {Q:"週末隊友提議帶寶寶去大賣場，妳覺得？", A:"人好多好累，寧願在家", B:"好耶！去看看人群也好", tA:'I', tB:'E'},
+                {Q:"加入媽媽群組後，妳通常？", A:"只潛水看乾貨，很少發言", B:"積極回應，分享自家寶寶照片", tA:'I', tB:'E'},
+                {Q:"需要做重大育兒決定時，妳會？", A:"自己查資料思考", B:"問遍所有親友的意見", tA:'I', tB:'E'},
+                {Q:"朋友想來探望新生兒，妳的想法？", A:"覺得招待客人壓力很大", B:"歡迎！正好有人陪我聊天", tA:'I', tB:'E'},
+                {Q:"買推車時，妳最在意？", A:"避震數據、耐重公斤數", B:"設計感、推出去的氛圍", tA:'S', tB:'N'},
+                {Q:"寶寶第一次胎動，妳的第一個念頭？", A:"喔！他在踢這個位置，很有力", B:"哇！他在跟我打招呼，他是個活潑的孩子", tA:'S', tB:'N'},
+                {Q:"看育兒書時，妳偏好？", A:"具體的照護步驟SOP", B:"探討兒童心理與靈性的篇章", tA:'S', tB:'N'},
+                {Q:"對於寶寶的未來，妳比較常想？", A:"下個月要打什麼疫苗、買什麼尺寸尿布", B:"他長大後會是什麼個性、我們會有哪些回憶", tA:'S', tB:'N'},
+                {Q:"挑選玩具時，妳傾向？", A:"安全、耐用、好清洗", B:"能激發想像力、有故事性", tA:'S', tB:'N'},
+                {Q:"面對長輩的育兒建議，妳會？", A:"看是否符合現代醫學實證", B:"感覺他們的出發點是否善意", tA:'S', tB:'N'},
+                {Q:"準備副食品時，妳更重視？", A:"精準的克數和營養比例", B:"顏色的搭配和擺盤的美感", tA:'S', tB:'N'},
+                {Q:"寶寶不明原因大哭，妳的第一反應？", A:"檢查尿布、體溫(Debug模式)", B:"心好痛，先抱緊他再說", tA:'T', tB:'F'},
+                {Q:"老公幫忙但笨手笨腳，妳會？", A:"直接指出錯誤並糾正", B:"看他很努力，先稱讚再說", tA:'T', tB:'F'},
+                {Q:"妳認為教養最重要的是？", A:"培養獨立邏輯思考", B:"給予滿滿的安全感與愛", tA:'T', tB:'F'},
+                {Q:"網路上看到嚴厲的管教影片，妳會？", A:"分析該方法的成效與合理性", B:"覺得孩子好可憐，看不下去", tA:'T', tB:'F'},
+                {Q:"寶寶摔倒了，妳會？", A:"確認傷勢，教他下次小心", B:"秀秀呼呼，安撫受驚嚇的情緒", tA:'T', tB:'F'},
+                {Q:"對於「百歲醫師」這類嚴格作息法，妳覺得？", A:"很有道理，規律對大家都好", B:"太殘忍了，捨不得讓寶寶哭", tA:'T', tB:'F'},
+                {Q:"關於待產包的準備？", A:"7個月就列好清單收好", B:"快生了才開始隨興丟東西進去", tA:'J', tB:'P'},
+                {Q:"寶寶今天不睡午覺打亂計畫，妳會？", A:"感到焦慮煩躁", B:"沒差，那就帶去公園玩吧", tA:'J', tB:'P'},
+                {Q:"家裡的育兒環境是？", A:"物品定位，奶瓶尿布有專屬區", B:"隨興擺放，拿得到就好", tA:'J', tB:'P'},
+                {Q:"對於生產計畫書？", A:"希望能按部就班執行", B:"隨機應變，健康就好", tA:'J', tB:'P'},
+                {Q:"週末的親子行程？", A:"幾點出發、去哪裡都排好", B:"睡醒看天氣心情再決定", tA:'J', tB:'P'},
+                {Q:"寶寶的穿搭風格？", A:"分類收納，成套搭配", B:"抓到哪件穿哪件，混搭風", tA:'J', tB:'P'},
+                {Q:"發現這週行程全滿，妳會？", A:"充滿幹勁，一項項完成", B:"感到壓力，想取消幾個", tA:'J', tB:'P'},
+                {Q:"妳覺得「好媽媽」的定義偏向？", A:"能高效解決問題", B:"能敏銳察覺情緒", tA:'T', tB:'F'},
+                {Q:"跟別的媽媽聊天時，妳喜歡？", A:"交流實用資訊(哪裡特價)", B:"分享心情與甘苦談", tA:'T', tB:'F'},
+                {Q:"對於「照書養」這件事？", A:"書是前人智慧，值得遵守", B:"每個寶寶不同，直覺更準", tA:'S', tB:'N'},
+                {Q:"一個人顧小孩時，妳覺得最難的是？", A:"沒人可以講話", B:"沒人可以接手換手", tA:'E', tB:'I'}
+            ];
+
+            let currentStage = null;
+            let currentQuiz = [];
+            let qIndex = 0;
+            let scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+
+            window.checkDateAndStart = function() {
+                const input = document.getElementById('target-date').value;
+                if(!input) { document.getElementById('error-msg').classList.remove('hidden'); return; }
+                document.getElementById('error-msg').classList.add('hidden');
+                
+                // 恢復日期計算邏輯
+                const target = new Date(input); const now = new Date();
+                const diffDays = Math.floor((now - target) / (1000 * 60 * 60 * 24));
+                currentStage = TIME_STAGES.find(s => diffDays >= s.range[0] && diffDays <= s.range[1]) || TIME_STAGES[TIME_STAGES.length-1];
+                if(diffDays < -280) currentStage = TIME_STAGES[0];
+
+                startQuiz();
+            }
+
+            function startQuiz() {
+                // 真正的隨機不重複選題
+                let pool = [...BASE_QUESTIONS].sort(() => 0.5 - Math.random());
+                currentQuiz = pool.slice(0, 12);
+                qIndex = 0;
+                scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+                document.getElementById('section-input').classList.add('hidden');
+                document.getElementById('section-quiz').classList.remove('hidden');
+                renderQuestion();
+            }
+
+            function renderQuestion() {
+                if(qIndex >= currentQuiz.length) { finishQuiz(); return; }
+                const q = currentQuiz[qIndex];
+                document.getElementById('q-current').innerText = qIndex + 1;
+                document.getElementById('q-bar').style.width = `${((qIndex)/currentQuiz.length)*100}%`;
+                document.getElementById('q-text').innerText = q.Q;
+                const optsDiv = document.getElementById('q-options');
+                optsDiv.innerHTML = '';
+                [{txt: q.A, type: q.tA}, {txt: q.B, type: q.tB}].sort(() => 0.5 - Math.random()).forEach(b => {
+                    const btn = document.createElement('button');
+                    btn.className = "quiz-option w-full p-4 rounded-xl text-left text-gray-700 font-medium text-sm md:text-base mb-2";
+                    btn.innerText = b.txt;
+                    btn.onclick = () => { scores[b.type]++; qIndex++; renderQuestion(); };
+                    optsDiv.appendChild(btn);
+                });
+            }
+
+            function finishQuiz() {
+                // 真實計算 MBTI
+                const mbti = (scores.E >= scores.I ? 'E' : 'I') + (scores.S >= scores.N ? 'S' : 'N') + (scores.T >= scores.F ? 'T' : 'F') + (scores.J >= scores.P ? 'J' : 'P');
+                
+                // 判斷家族
+                let family = 'SJ';
+                if (mbti.includes('S') && mbti.includes('J')) family = 'SJ';
+                else if (mbti.includes('N') && mbti.includes('F')) family = 'NF';
+                else if (mbti.includes('S') && mbti.includes('P')) family = 'SP';
+                else if (mbti.includes('N') && mbti.includes('T')) family = 'NT';
+
+                const titles = { SJ: "守護者媽咪", NF: "理想家媽咪", SP: "探險家媽咪", NT: "理性派媽咪" };
+                // 容錯處理：如果該階段沒有資料，使用 pre_1 或該家族的默認值
+                const stageData = CONTENT_MATRIX[currentStage.id] || CONTENT_MATRIX['pre_1'];
+                const content = stageData[family] || stageData['SJ'];
+                
+                document.getElementById('res-title').innerText = `${titles[family]} (${mbti})`;
+                document.getElementById('res-stage-badge').innerText = currentStage.label;
+                document.getElementById('res-stress').innerText = content.stress;
+                document.getElementById('res-reminder').innerText = content.reminder;
+                document.getElementById('res-action').innerText = content.action;
+                
+                // 更貼心的 SOS 內容
+                const sosText = `親愛的隊友：\n\n我是${mbti}類型的${titles[family]}，現在處於${currentStage.label}。\n\n最近我常感到：\n「${content.stress}」\n\n這不是無理取鬧，而是因為我太在乎。\n\n你可以這樣幫我：\n1. ${content.action}\n2. 給我一個不帶評價的擁抱\n3. 告訴我「我們一起面對」\n\n謝謝你成為我的神隊友！`;
+                document.getElementById('sos-content').innerText = sosText;
+
+                document.getElementById('section-quiz').classList.add('hidden');
+                document.getElementById('section-result').classList.remove('hidden');
+            }
+
+            window.resetTest = function() {
+                document.getElementById('section-result').classList.add('hidden');
+                document.getElementById('section-input').classList.remove('hidden');
+                document.getElementById('target-date').value = '';
+            }
+
+            window.showYangYangModal = function(e) { e.preventDefault(); document.getElementById('modal-yang').classList.remove('hidden'); }
+            window.showSosModal = function() { 
+                document.getElementById('modal-sos').classList.remove('hidden'); 
+                document.getElementById('btn-copy').onclick = () => { 
+                    const text = document.getElementById('sos-content').innerText;
+                    navigator.clipboard.writeText(text).then(() => alert('複製成功！快傳給老公！'));
+                };
+            }
+            window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }
+        }
+    </script>
+</body>
+</html>
